@@ -145,4 +145,126 @@ const App = (props) => {
 # Getting data from Sever 
 
 
-All requests are nonblocking IE they will not wait for the return to continue code execution 
+All requests are nonblocking IE they will not wait for the return to continue code execution since the javascript runtime engine is single threaded
+
+you can use json-server as a tool for developing this frontend `npx json-server --port 3001 --watch db.json
+`
+Reads from the file db.json in the root directory of the project      
+<br>
+
+### Fetch
+Standard request tool
+Axios is similar to fetch but more pleasant
+
+#### Package.json 
+A config file used by npm, you can look at dependencies, when you run `npm install axios` you should see axios added to the list of dependencies as well as the libary code downloaded in npm_modules
+> Install scripts are another usefull part of the package file by running `npm install json-server --save-dev` it adds this command to the scripts object `    "server": "json-server -p3001 --watch db.json"` now by running `npm run server` we can run our json server
+
+### Axios & Promises
+```js
+import axios from 'axios'
+
+const promise = axios.get('http://localhost:3001/notes')
+promise.then(response => {
+  console.log(response)
+})
+```
+- ### Promise 
+  - A promise is an object representing eventual completion or a failure of an async operation, which can be in three states
+      1. Pending: final value is not available yet
+      2. Fufilled: operation has completed and final value is avaiable
+      3. Rejected: Error prevented final value from being determined
+  - Once a promise is fufilled we can use the `then` keyword to write a callback function that runs after completion 
+
+more readable version:
+```js 
+  axios
+  .get('http://localhost:3001/notes')
+  .then(response => {
+    const notes = response.data
+    console.log(notes)
+  })
+```
+
+## Effect-hooks
+Like state hooks but for fetching data
+```js
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
+import Note from './components/Note'
+
+const App = () => {
+  const [notes, setNotes] = useState([])
+  const [newNote, setNewNote] = useState('')
+  const [showAll, setShowAll] = useState(true)
+
+  useEffect(() => {
+    console.log('effect')
+    axios
+      .get('http://localhost:3001/notes')
+      .then(response => {
+        console.log('promise fulfilled')
+        setNotes(response.data)
+      })
+  }, [])
+  console.log('render', notes.length, 'notes')
+}
+
+useEffect(hook, [])
+
+```
+> Two parameters, 
+> > Effects run after every completed render, but you can choose to fire it only when certain values change
+
+
+## Alterering data in server
+
+### REST
+Data objects are refered to as resources, each resource has a unique URL associated with it.  
+Resources are fetched with a GET 
+```js
+import axios from 'axios'
+const baseUrl = 'http://localhost:3001/notes'
+
+const getAll = () => {
+  return axios.get(baseUrl)
+}
+
+const create = newObject => {
+  return axios.post(baseUrl, newObject)
+}
+
+const update = (id, newObject) => {
+  return axios.put(`${baseUrl}/${id}`, newObject)
+}
+
+export default { 
+  getAll: getAll, 
+  create: create, 
+  update: update 
+}import axios from 'axios'
+const baseUrl = 'http://localhost:3001/notes'
+
+const getAll = () => {
+  const request = axios.get(baseUrl)
+  return request.then(response => response.data)
+}
+
+const create = newObject => {
+  const request = axios.post(baseUrl, newObject)
+  return request.then(response => response.data)
+}
+
+const update = (id, newObject) => {
+  const request = axios.put(`${baseUrl}/${id}`, newObject)
+  return request.then(response => response.data)
+}
+
+export default { 
+  getAll: getAll, 
+  create: create, 
+  update: update 
+}
+```
+> Seperate communication functions to src/services directory add notes.js then in the apps component import the services
+
